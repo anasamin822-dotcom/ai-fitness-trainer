@@ -112,53 +112,63 @@ def workout_split(goal):
         return ["Full Body", "Rest/Cardio", "Upper", "Lower", "Light Training"]
 
 # =========================
-# 🇮🇳 DYNAMIC DIET
+# 🍱 DIET (Veg/Non-Veg + Health Safe)
 # =========================
-def meal_plan(cal, goal):
+def meal_plan(cal, goal, pref, health):
 
     protein = int(cal * 0.3 / 4)
 
-    breakfast_bulk = ["Oats + Milk + Banana", "Idli + Sambar + Eggs", "Dosa + Milk", "Paratha + Curd"]
-    lunch_bulk = ["Rice + Chicken Curry", "Rice + Dal + Ghee", "Biryani + Raita", "Chapati + Paneer"]
-    dinner_bulk = ["Chapati + Eggs", "Rice + Fish Curry", "Paneer + Roti", "Chicken + Chapati"]
-    snacks_bulk = ["Banana Shake", "Dry Fruits", "Peanut Butter Sandwich", "Lassi"]
+    breakfast = {
+        "Veg": ["Oats + Milk + Banana", "Idli + Sambar", "Upma", "Poha",
+                "Paneer Sandwich", "Peanut Butter Toast"],
+        "Non-Veg": ["Oats + Eggs", "Egg Omelette + Bread",
+                    "Boiled Eggs + Toast", "Chicken Sandwich"]
+    }
 
-    breakfast_cut = ["Oats + Fruits", "Idli (2)", "Boiled Eggs + Apple", "Upma"]
-    lunch_cut = ["Grilled Chicken + Salad", "Dal + Veg", "Paneer + Salad", "Rice (small) + Dal"]
-    dinner_cut = ["Boiled Eggs + Veg", "Soup + Salad", "Chicken + Veg", "Paneer + Salad"]
-    snacks_cut = ["Sprouts", "Buttermilk", "Fruits", "Green Tea"]
+    lunch = {
+        "Veg": ["Rice + Dal + Ghee", "Paneer + Chapati",
+                "Rajma + Rice", "Veg Biryani (low oil)"],
+        "Non-Veg": ["Chicken Curry + Rice", "Fish Curry + Rice",
+                    "Chicken Biryani (controlled)", "Grilled Chicken + Rice"]
+    }
 
-    breakfast_bal = ["Upma + Milk", "Eggs + Toast", "Idli + Sambar", "Oats + Fruits"]
-    lunch_bal = ["Rice + Dal + Veg", "Chapati + Chicken", "Rice + Paneer", "Curd Rice"]
-    dinner_bal = ["Chapati + Veg", "Eggs + Salad", "Light Rice + Dal", "Paneer + Roti"]
-    snacks_bal = ["Fruits", "Nuts", "Buttermilk", "Boiled Corn"]
+    dinner = {
+        "Veg": ["Chapati + Veg", "Paneer + Roti",
+                "Dal + Rice", "Veg Soup + Salad"],
+        "Non-Veg": ["Chicken + Chapati", "Fish + Rice",
+                    "Eggs + Roti", "Grilled Chicken + Salad"]
+    }
 
-    if goal == "Bulk":
-        return [
-            f"🥞 Breakfast: {random.choice(breakfast_bulk)}",
-            f"🍛 Lunch: {random.choice(lunch_bulk)}",
-            f"🍲 Dinner: {random.choice(dinner_bulk)}",
-            f"🥤 Snacks: {random.choice(snacks_bulk)}",
-            f"💪 Protein: {protein}g"
-        ]
+    snacks = {
+        "Veg": ["Fruits", "Nuts", "Buttermilk",
+                "Protein Shake", "Peanut Butter Sandwich"],
+        "Non-Veg": ["Boiled Eggs", "Chicken Salad",
+                    "Protein Shake", "Greek Yogurt"]
+    }
 
-    elif goal == "Cut":
-        return [
-            f"🥗 Breakfast: {random.choice(breakfast_cut)}",
-            f"🍗 Lunch: {random.choice(lunch_cut)}",
-            f"🥚 Dinner: {random.choice(dinner_cut)}",
-            f"🥒 Snacks: {random.choice(snacks_cut)}",
-            f"🔥 Protein: {protein}g"
-        ]
+    # 🔒 Health-based filtering
+    if health == "Diabetes":
+        breakfast[pref] = [x for x in breakfast[pref] if "Banana" not in x]
+        snacks[pref] = [x for x in snacks[pref] if "Shake" not in x]
 
-    else:
-        return [
-            f"🍞 Breakfast: {random.choice(breakfast_bal)}",
-            f"🍛 Lunch: {random.choice(lunch_bal)}",
-            f"🥗 Dinner: {random.choice(dinner_bal)}",
-            f"🥜 Snacks: {random.choice(snacks_bal)}",
-            f"⚖️ Protein: {protein}g"
-        ]
+    elif health == "High BP":
+        lunch[pref] = [x for x in lunch[pref] if "Biryani" not in x]
+        dinner[pref] = [x for x in dinner[pref] if "Biryani" not in x]
+
+    elif health == "Sensitive Digestion":
+        breakfast[pref] = [x for x in breakfast[pref] if "Paratha" not in x]
+        lunch[pref] = [x for x in lunch[pref] if "Biryani" not in x]
+
+    def pick(meals):
+        return random.sample(meals, 1)[0]
+
+    return [
+        f"🥞 Breakfast: {pick(breakfast[pref])}",
+        f"🍛 Lunch: {pick(lunch[pref])}",
+        f"🍲 Dinner: {pick(dinner[pref])}",
+        f"🥤 Snacks: {pick(snacks[pref])}",
+        f"💪 Protein: {protein}g"
+    ]
 
 # =========================
 # LAYOUT
@@ -180,6 +190,11 @@ with col1:
 
     activity = st.selectbox("🏃 Activity Level", ["Low","Moderate","High"])
     goal = st.selectbox("🎯 Goal", ["Bulk","Cut","Maintain"])
+
+    diet_pref = st.selectbox("🍽️ Diet Preference", ["Veg","Non-Veg"])
+
+    # ✅ NEW HEALTH OPTION
+    health = st.selectbox("🩺 Health Condition", ["None", "Diabetes", "High BP", "Sensitive Digestion"])
 
     generate = st.button("🚀 Generate Plan")
 
@@ -210,7 +225,8 @@ with col2:
             st.write("👉", d)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        meals = meal_plan(cal, goal)
+        meals = meal_plan(cal, goal, diet_pref, health)
+
         st.markdown('<div class="card"><div class="card-title">🍱 Diet Plan</div>', unsafe_allow_html=True)
         for m in meals:
             st.write("👉", m)
